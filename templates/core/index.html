@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h2 class="mb-0">TODO list</h2>
+      <a href="{% url 'core:task-create' %}" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> Add task
+      </a>
+    </div>
+
+    {% if task_list %}
+      <div class="row">
+        {% for task in task_list %}
+          <div class="col-12 mb-3">
+            <div class="card shadow-sm">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                  <h5 class="card-title mb-0 flex-grow-1">
+                    {{ task.content }}
+                  </h5>
+                  {% if task.done %}
+                    <span class="badge bg-success ms-2">Done</span>
+                  {% else %}
+                    <span class="badge bg-warning text-dark ms-2">Pending</span>
+                  {% endif %}
+                </div>
+
+                <p class="text-muted small mb-3">
+                  <i class="bi bi-calendar"></i> Created: {{ task.created_at|date:"Y-m-d H:i" }}
+                </p>
+
+                <div class="mb-3">
+                  <strong class="text-secondary small">Tags:</strong>
+                  {% for tag in task.tags.all %}
+                    <span class="badge bg-secondary ms-1">{{ tag.name }}</span>
+                  {% empty %}
+                    <span class="text-muted small ms-1">No tags</span>
+                  {% endfor %}
+                </div>
+
+                <div class="d-flex gap-2 flex-wrap">
+                  <form action="{% url 'core:task-toggle-is-done' task.pk %}" method="post" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-sm {% if task.done %}btn-outline-secondary{% else %}btn-success{% endif %}">
+                      {% if task.done %}
+                        <i class="bi bi-arrow-counterclockwise"></i> Undo
+                      {% else %}
+                        <i class="bi bi-check-circle"></i> Complete
+                      {% endif %}
+                    </button>
+                  </form>
+                  <a href="{% url 'core:task-update' task.pk %}" class="btn btn-sm btn-outline-primary ml-1">
+                    <i class="bi bi-pencil"></i> Update
+                  </a>
+                  <a href="{% url 'core:task-delete' task.pk %}" class="btn btn-sm btn-outline-danger ml-1">
+                    <i class="bi bi-trash"></i> Delete
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="alert alert-info text-center" role="alert">
+        <h5 class="alert-heading">No tasks yet!</h5>
+        <p class="mb-0">Start by creating your first task.</p>
+      </div>
+    {% endif %}
+  </div>
+{% endblock %}
