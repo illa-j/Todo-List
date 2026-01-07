@@ -1,7 +1,10 @@
 from django.http import HttpRequest, HttpResponse, HttpResponseRedirect
+from django.shortcuts import redirect
 from django.urls import reverse_lazy
+from django.utils.decorators import method_decorator
 from django.views import generic
 from django.views.decorators.http import require_POST
+from django.views.generic.detail import SingleObjectMixin
 
 from core.forms import TaskForm
 from core.models import Task, Tag
@@ -38,16 +41,15 @@ class TagListView(generic.ListView):
     paginate_by = 5
 
 
-@require_POST
-def toggle_update_is_done(request: HttpRequest, pk: int) -> HttpResponse:
-    try:
-        task = Task.objects.get(pk=pk)
-        task.done = not task.done
-        task.save()
-        return HttpResponseRedirect(reverse_lazy("core:index"))
-    except Task.DoesNotExist:
-        return HttpResponse("Task not found")
+@method_decorator(require_POST, name="dispatch")
+class UpdateStatusView(SingleObjectMixin, generic.View):
+    model = Task
 
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        self.object.done = not self.object.done
+        self.object.save(update_fields=["done"])
+        return redirect("core:index")
 
 class TagCreateView(generic.CreateView):
     model = Tag
